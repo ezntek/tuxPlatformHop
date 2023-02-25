@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "tuxPlatformHop"
+version = "0.1.0"
+description = "a really bad doodle jump clone"
+authors = ["ezntek <ezntek@xflymusic.com>"]
+license = "GPLv3"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
