@@ -6,6 +6,20 @@ authors = ["ezntek <ezntek@xflymusic.com>"]
 license = "GPLv3"
 readme = "README.md"
 
+[tool.pyright]
+    include = ["tph"]
+    exclude = ["**/__pycache__"]
+    venv = ".venv"
+
+    reportMissingImports = true
+    
+    [[tool.pyright.executionEnvironments]]
+        root = "."
+        extraPaths = "tph/"
+    
+    [[tool.pyright.executionEnvironments]]
+        root = "tph/"
+
 [tool.poetry.dependencies]
 python = "^3.11"
 
