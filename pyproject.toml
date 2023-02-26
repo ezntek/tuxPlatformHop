@@ -7,7 +7,7 @@ license = "GPLv3"
 readme = "README.md"
 
 [tool.pyright]
-    include = ["tph"]
+    include = ["game"]
     exclude = ["**/__pycache__"]
     venv = ".venv"
 
@@ -15,10 +15,11 @@ readme = "README.md"
     
     [[tool.pyright.executionEnvironments]]
         root = "."
-        extraPaths = "tph/"
+        extraPaths = "game/tph"
     
     [[tool.pyright.executionEnvironments]]
-        root = "tph/"
+        root = "game/"
+        extraPaths = "game/tph"
 
 [tool.poetry.dependencies]
 python = "^3.11"

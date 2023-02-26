@@ -1,0 +1,12 @@
+{
+    "win32" : {
+        "32bit": "raylib.dll",
+        "64bit": "raylib.dll"
+    },
+    "linux": {
+        "64bit": "/usr/local/lib/libraylib.so.4.2.0"
+    }, 
+    "darwin": {
+        "64bit": "/usr/local/lib/libraylib.4.2.0.dylib"
+    }
+}

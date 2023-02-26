@@ -12,21 +12,5 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-import rlapi as rl
-
-def refresh() -> None:
-    pass
-
-def render() -> None:
-    rl.clear_background(rl.RAYWHITE)
-    rl.draw_fps(20, 20)
-
-def main() -> None:
-    rl.init_window(600, 900, "test")
-    while not rl.window_should_close():
-        with rl.drawing(): refresh()
-        
-    rl.close_window()
-
-if __name__ == "__main__":
-    main()
+# global vars
+__version__ = "0.1.0"
