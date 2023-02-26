@@ -12,6 +12,7 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
+import abc
 import typing
 import dataclasses
 
@@ -19,7 +20,7 @@ from .. import rlapi as rl
 from ..colors import Colors
 
 # Class Definitions
-class Sprite():
+class Sprite(abc.ABC):
     "The base class for all Sprites."
 
     def __init__(self, x: float, y: float, width: float, height: float) -> None:
@@ -30,12 +31,26 @@ class Sprite():
         self._repr_text: str = ""
         self._hitbox_color: rl.Color = Colors.nothing
 
-    # Function Definitions"Si Base Class"
-    def _kb_input(self) -> None: return
-    def collision(self, sprite: typing.Self) -> None: return
-    def refresh(self) -> None: return
-    def render(self) -> None: return
-    def __repr__(self) -> str: return self._repr_text
+    def __repr__(self) -> str:
+        return self._repr_text
+
+    # Function Definitions
+    @abc.abstractmethod
+    def _kb_input(self) -> None:
+        pass
+    
+    @abc.abstractmethod
+    def collision(self, sprite) -> None:
+        return
+    
+    @abc.abstractmethod
+    def refresh(self, sprite, input_buffer: list[rl.KeyboardKey]) -> None:
+        pass
+
+    @abc.abstractmethod
+    def render(self) -> None:
+        pass
+
 
 @dataclasses.dataclass
 class SpriteSlot():
@@ -61,7 +76,7 @@ class SpriteGroup():
         self._current_index = 0 # for the iterator
 
         self._recently_deleted_sprites: list[int]
-
+    
     def squeeze(self) -> None:
         try:
             if self.sprites[-1].content == None:

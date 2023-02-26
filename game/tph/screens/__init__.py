@@ -45,5 +45,5 @@ class MainScreen(Screen):
     def render(self) -> None:
         rl.clear_background(rl.RAYWHITE)
     
-    def refresh(self):
+    def refresh(self) -> None:
         self.ticker += 1

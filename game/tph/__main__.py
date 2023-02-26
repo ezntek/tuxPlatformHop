@@ -12,6 +12,8 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
+from . import sprites
+from .sprites import player
 from . import screens
 from . import rlapi as rl
 from . import __version__
@@ -30,7 +32,11 @@ def main() -> None:
     # set up the screens
     active_screen: screens.Screen = screens.MainScreen(f"tuxPlatformHop {__version__}")
     rl.set_window_title(active_screen.title)
-   
+
+    # sprites
+    main_sprite_group = sprites.SpriteGroup()
+    main_sprite_group.register_sprite(player.Player)
+
     while not rl.window_should_close():
         with rl.drawing(): active_screen.render()
         active_screen.refresh()
