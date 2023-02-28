@@ -7,6 +7,6 @@
         "64bit": "/usr/local/lib/libraylib.so.4.2.0"
     }, 
     "darwin": {
-        "64bit": "/usr/local/lib/libraylib.4.2.0.dylib"
+        "64bit": "/opt/homebrew/lib/libraylib.4.2.0.dylib"
     }
 }

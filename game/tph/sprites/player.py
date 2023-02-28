@@ -12,30 +12,28 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License
 
+from . import Entity
 from ..colors import Colors
 from .. import rlapi as rl
-from . import *
 
-class Player(Sprite):
-    def __init__(self, x: float, y: float, width: float, height: float) -> None:
-        super().__init__(x, y, width, height)
+class Player(Entity):
+    def __init__(self, x: float, y: float) -> None:
+        super().__init__(x, y, 60, 80)
         self._hitbox_color = Colors.maroon
 
-    def _kb_input(self, input_buffer: list[rl.KeyboardKey]) -> None:
-        while len(input_buffer) > 0:
-            current_key: rl.KeyboardKey = input_buffer.pop(-1)
-            match current_key:
-                case rl.KEY_LEFT:
-                    self.hitbox.x -= 10
-                case rl.KEY_RIGHT:
-                    self.hitbox.x += 10
-    
-    def collision(self, sprite: Sprite) -> None:
+    def _handle_key(self, current_key: rl.KeyboardKey) -> None:
+        match current_key:
+            case rl.KEY_LEFT:
+                self.hitbox.x -= 10
+            case rl.KEY_RIGHT:
+                self.hitbox.x += 10
+
+    def collision(self, sprite: Entity) -> None:
         pass
 
     def render(self) -> None:
         rl.draw_rectangle_rec(self.hitbox, self._hitbox_color)
     
-    def refresh(self, sprite: Sprite, input_buffer: list[rl.KeyboardKey]) -> None:
+    def refresh(self, sprite: Entity, input_buffer: list[rl.KeyboardKey]) -> None:
         self._kb_input(input_buffer)
         self.collision(sprite)

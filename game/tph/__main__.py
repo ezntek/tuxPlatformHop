@@ -18,17 +18,6 @@ from . import screens
 from . import rlapi as rl
 from . import __version__
 
-def refresh(sprite_groups: list[sprites.SpriteGroup]) -> None:
-    for group in sprite_groups:
-        group.refresh()
-
-def render(sprite_groups: list[sprites.SpriteGroup]) -> None:
-    rl.clear_background(rl.RAYWHITE)
-    rl.draw_fps(20, 20)
-
-    for group in sprite_groups:
-        group.render()
-
 def main() -> None:
     rl.init_window(600, 900, "test")
     rl.set_target_fps(60)
@@ -42,7 +31,7 @@ def main() -> None:
     main_sprite_group.register_sprite(player.Player(50, 50))
 
     while not rl.window_should_close():
-        with rl.drawing(): active_screen.render()
-        active_screen.refresh()
+        with rl.drawing(): active_screen.render([main_sprite_group])
+        active_screen.refresh([main_sprite_group])
              
     rl.close_window()

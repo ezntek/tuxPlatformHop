@@ -16,7 +16,6 @@ import abc
 import typing
 import dataclasses
 
-from .entity import *
 from .. import rlapi as rl
 from ..colors import Colors
 
@@ -52,6 +51,33 @@ class Sprite(abc.ABC):
     def render(self) -> None:
         pass
 
+class Entity(Sprite):
+    "The base class for an entity."
+
+    def __init__(self, x: float, y: float, width: float, height: float) -> None:
+        super().__init__(x, y, width, height)
+
+    def _handle_key(self, current_key: rl.KeyboardKey):
+        pass
+
+    def _kb_input(self, input_buffer: list[rl.KeyboardKey]) -> None:
+        while len(input_buffer) > 0:
+            self._handle_key(input_buffer.pop(-1))
+    
+    def collision(self, sprite: Sprite | None) -> None:
+        pass
+
+    def move_to(self, pos_x: float, pos_y: float) -> None:
+        self.hitbox.xy = pos_x, pos_y
+
+    def move_to_v(self, position: rl.Vector2) -> None:
+        self.hitbox.xy = position.xy
+
+    def render(self) -> None:
+        return super().render()
+    
+    def refresh(self, collision_sprite: Sprite | None, input_buffer: list[rl.KeyboardKey]) -> None:
+        return super().refresh(collision_sprite, input_buffer)
 
 @dataclasses.dataclass
 class SpriteSlot():
@@ -123,4 +149,4 @@ class SpriteGroup():
 
     def refresh(self, collision_sprite: Sprite | Entity | None, input_buffer: list[rl.KeyboardKey]) -> None:
         for slot in self:
-            slot.content.refresh(collision_sprite, input_buffer) 
+            slot.content.refresh(collision_sprite, input_buffer)
