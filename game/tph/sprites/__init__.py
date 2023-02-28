@@ -16,6 +16,7 @@ import abc
 import typing
 import dataclasses
 
+from .entity import *
 from .. import rlapi as rl
 from ..colors import Colors
 
@@ -40,11 +41,11 @@ class Sprite(abc.ABC):
         pass
     
     @abc.abstractmethod
-    def collision(self, sprite) -> None:
+    def collision(self, sprite: typing.Any | None) -> None:
         return
     
     @abc.abstractmethod
-    def refresh(self, sprite, input_buffer: list[rl.KeyboardKey]) -> None:
+    def refresh(self, collision_sprite: typing.Any | None, input_buffer: list[rl.KeyboardKey]) -> None:
         pass
 
     @abc.abstractmethod
@@ -64,19 +65,20 @@ class SpriteSlot():
     
     def set_content(self, sprite: Sprite) -> None:
         self.sprite = sprite
-    
+
     def __repr__(self) -> str:
         return f"{self.content.__repr__()} at index {self.index}"
 
 class SpriteGroup():
     "Just an iterable group of sprites (with utility functions of course)" 
 
-    def __init__(self, *sprites: Sprite) -> None:
+    def __init__(self, *sprites: Sprite | Entity) -> None:
         self.sprites: list[SpriteSlot] = [SpriteSlot(sprite, index=count) for count, sprite in enumerate(sprites)]
         self._current_index = 0 # for the iterator
 
-        self._recently_deleted_sprites: list[int]
-    
+        self._recently_deleted_sprites: list[int] = []
+        
+
     def squeeze(self) -> None:
         try:
             if self.sprites[-1].content == None:
@@ -88,7 +90,7 @@ class SpriteGroup():
         except IndexError:
             return
 
-    def register_sprite(self, new_sprite: Sprite) -> None:
+    def register_sprite(self, new_sprite: Sprite | Entity):
         if len(self._recently_deleted_sprites) != 0:
             self.sprites[self._recently_deleted_sprites[-1]].set_content(new_sprite)
             self._recently_deleted_sprites.pop(-1)
@@ -111,3 +113,14 @@ class SpriteGroup():
     
     def __getitem__(self, index: int) -> SpriteSlot:
         return self.sprites[index]
+
+    def render(self) -> None:
+        for slot in self:
+            try:
+                slot.content.render()
+            except ValueError: # because can be None
+                pass
+
+    def refresh(self, collision_sprite: Sprite | Entity | None, input_buffer: list[rl.KeyboardKey]) -> None:
+        for slot in self:
+            slot.content.refresh(collision_sprite, input_buffer) 
