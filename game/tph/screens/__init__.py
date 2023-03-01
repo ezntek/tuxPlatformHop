@@ -43,22 +43,16 @@ class MainScreen(Screen):
         self.ticker: int = 0
         self.title = title
 
-    def refresh(self, sprite_groups: list[sprites.SpriteGroup]) -> None:
-        buffer: list[rl.KeyboardKey] = []
-        current_key: rl.KeyboardKey = rl.KeyboardKey(0)
-
-        while current_key != 0:
-            for _, v in {key: value for key, value in rl.KeyboardKey.__dict__.items() if not key.startswith("__") and not callable(key)}:
-                pass
-            buffer.append(current_key) if rl.is_key_down(current_key) else None
-            current_key = rl.KeyboardKey(rl.get_key_pressed())
-        
+    def refresh(self, sprite_groups: list[sprites.SpriteGroup], entity_groups: list[sprites.EntityGroup]) -> None:
         for group in sprite_groups:
-            group.refresh(None, buffer)
+            group.refresh(self.ticker)
+        
+        for entity_group in entity_groups:
+            entity_group.refresh(self.ticker, None)
 
     def render(self, sprite_groups: list[sprites.SpriteGroup]) -> None:
         rl.clear_background(rl.RAYWHITE)
         rl.draw_fps(20, 20)
 
         for group in sprite_groups:
-            group.render()
+            group.render(self.ticker)

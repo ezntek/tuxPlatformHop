@@ -36,19 +36,11 @@ class Sprite(abc.ABC):
 
     # Function Definitions
     @abc.abstractmethod
-    def _kb_input(self) -> None:
-        pass
-    
-    @abc.abstractmethod
-    def collision(self, sprite: typing.Any | None) -> None:
-        return
-    
-    @abc.abstractmethod
-    def refresh(self, collision_sprite: typing.Any | None, input_buffer: list[rl.KeyboardKey]) -> None:
+    def refresh(self, ticker: int) -> None:
         pass
 
     @abc.abstractmethod
-    def render(self) -> None:
+    def render(self, ticker: int) -> None:
         pass
 
 class Entity(Sprite):
@@ -57,14 +49,14 @@ class Entity(Sprite):
     def __init__(self, x: float, y: float, width: float, height: float) -> None:
         super().__init__(x, y, width, height)
 
-    def _handle_key(self, current_key: rl.KeyboardKey):
-        pass
+    def _screen_wrap(self): 
+        if self.hitbox.x > 600 - (self.hitbox.width/2):
+            self.hitbox.x = 0 - (self.hitbox.width/2)
+        
+        if self.hitbox.x < 0 - (self.hitbox.width/2):
+            self.hitbox.x = 600 - (self.hitbox.width/2)
 
-    def _kb_input(self, input_buffer: list[rl.KeyboardKey]) -> None:
-        while len(input_buffer) > 0:
-            self._handle_key(input_buffer.pop(-1))
-    
-    def collision(self, sprite: Sprite | None) -> None:
+    def collision(self, item: 'Entity | Sprite | None') -> None:
         pass
 
     def move_to(self, pos_x: float, pos_y: float) -> None:
@@ -73,11 +65,38 @@ class Entity(Sprite):
     def move_to_v(self, position: rl.Vector2) -> None:
         self.hitbox.xy = position.xy
 
-    def render(self) -> None:
-        return super().render()
+    def render(self, ticker: int) -> None:
+        return super().render(ticker)
     
-    def refresh(self, collision_sprite: Sprite | None, input_buffer: list[rl.KeyboardKey]) -> None:
-        return super().refresh(collision_sprite, input_buffer)
+    def refresh(self, collision_item: 'Sprite | Entity | None', ticker: int) -> None:
+        self.collision(collision_item)
+        self._screen_wrap()
+
+class ControllableEntity(Entity):
+    "A user-controllable Entity."
+
+    def __init__(self, x: float, y: float, width: float, height: float) -> None:
+        super().__init__(x, y, width, height)
+        self._keys: dict[rl.KeyboardKey, typing.Callable[[], None]]
+
+    def _kb_input(self) -> None:
+        for key, fn in self._keys.items():
+            fn() if rl.is_key_down(key) else None
+
+    def collision(self, item: 'Entity | Sprite | None') -> None:
+        pass
+
+    def move_to(self, pos_x: float, pos_y: float) -> None:
+        self.hitbox.xy = pos_x, pos_y
+
+    def move_to_v(self, position: rl.Vector2) -> None:
+        self.hitbox.xy = position.xy
+
+    def render(self, ticker: int) -> None:
+        return super().render(ticker)
+    
+    def refresh(self, collision_item: 'Entity | Sprite | None', ticker: int) -> None:
+        return super().refresh(collision_item, ticker)
 
 @dataclasses.dataclass
 class SpriteSlot():
@@ -95,20 +114,28 @@ class SpriteSlot():
     def __repr__(self) -> str:
         return f"{self.content.__repr__()} at index {self.index}"
 
+@dataclasses.dataclass
+class EntitySlot(SpriteSlot):
+    "A slot for an Entity that holds additional metadata and a few utility functions for cleaner code."
+
+    content: Entity
+
+    def set_content(self, entity: Entity) -> None:
+        self.content = entity
+
 class SpriteGroup():
     "Just an iterable group of sprites (with utility functions of course)" 
 
-    def __init__(self, *sprites: Sprite | Entity) -> None:
-        self.sprites: list[SpriteSlot] = [SpriteSlot(sprite, index=count) for count, sprite in enumerate(sprites)]
+    def __init__(self, *sprites: Sprite) -> None:
+        self.items: list[SpriteSlot] = [SpriteSlot(sprite, index=count) for count, sprite in enumerate(sprites)]
         self._current_index = 0 # for the iterator
 
-        self._recently_deleted_sprites: list[int] = []
+        self._recently_deleted_items: list[int] = []
         
-
     def squeeze(self) -> None:
         try:
-            if self.sprites[-1].content == None:
-                self.sprites.pop(-1)
+            if self.items[-1].content == None:
+                self.items.pop(-1)
                 try:
                     self.squeeze()
                 except IndexError:
@@ -116,37 +143,70 @@ class SpriteGroup():
         except IndexError:
             return
 
-    def register_sprite(self, new_sprite: Sprite | Entity):
-        if len(self._recently_deleted_sprites) != 0:
-            self.sprites[self._recently_deleted_sprites[-1]].set_content(new_sprite)
-            self._recently_deleted_sprites.pop(-1)
-        self.sprites.append(SpriteSlot(new_sprite, index=len(self.sprites)))
+    def register_item(self, new_item: Sprite):
+        if len(self._recently_deleted_items) != 0:
+            self.items[self._recently_deleted_items.pop(-1)].set_content(new_item)
+            return
+        self.items.append(SpriteSlot(new_item, index=len(self.items)))
 
-    def delete_sprite(self, at_index: int) -> None:
-        self.sprites[at_index].set_content(None) # type: ignore
-        self._recently_deleted_sprites.append(at_index)
+    def delete_item(self, at_index: int) -> None:
+        self.items[at_index].set_content(None) # type: ignore
+        self._recently_deleted_items.append(at_index)
 
-    def __iter__(self) -> typing.Self:
+    def __iter__(self) -> 'SpriteGroup':
         return self
     
     def __next__(self) -> SpriteSlot:
-        if self._current_index >= len(self.sprites):
+        if self._current_index >= len(self.items):
             self._current_index = 0
             raise StopIteration
-        retval: SpriteSlot = self.sprites[self._current_index]
+        retval: SpriteSlot = self.items[self._current_index]
         self._current_index += 1
         return retval
     
     def __getitem__(self, index: int) -> SpriteSlot:
-        return self.sprites[index]
+        return self.items[index]
 
-    def render(self) -> None:
-        for slot in self:
+    def render(self, ticker: int) -> None:
+        for slot in self.items:
             try:
-                slot.content.render()
+                slot.content.render(ticker)
             except ValueError: # because can be None
                 pass
 
-    def refresh(self, collision_sprite: Sprite | Entity | None, input_buffer: list[rl.KeyboardKey]) -> None:
-        for slot in self:
-            slot.content.refresh(collision_sprite, input_buffer)
+    def refresh(self, ticker: int) -> None:
+        for slot in self.items:
+            slot.content.refresh(ticker)
+
+class EntityGroup(SpriteGroup):
+    def __init__(self, *entities: Entity) -> None:
+        self.items: list[EntitySlot] = [EntitySlot(entity, count) for count, entity in enumerate(entities)]
+        self._recently_deleted_items: list[int] = []
+
+    def register_item(self, new_item: Entity) -> None:
+        if len(self._recently_deleted_items) != 0:
+            self.items[self._recently_deleted_items.pop(-1)].set_content(new_item)
+            return
+        self.items.append(EntitySlot(new_item, index=len(self.items)))
+
+    def __next__(self) -> EntitySlot:
+        if self._current_index >= len(self.items):
+            self._current_index = 0
+            raise StopIteration
+        retval: EntitySlot = self.items[self._current_index]
+        self._current_index += 1
+        return retval
+
+    def __getitem__(self, index: int) -> EntitySlot:
+        return self.items[index]
+ 
+    def render(self, ticker: int) -> None:
+        for slot in self.items:
+            try:
+                slot.content.render(ticker)
+            except ValueError: # because can be None
+                pass
+
+    def refresh(self, ticker: int, collision_item: Entity | Sprite | None) -> None:
+        for slot in self.items:
+            slot.content.refresh(collision_item, ticker)

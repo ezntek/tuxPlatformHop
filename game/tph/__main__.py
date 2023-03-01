@@ -27,11 +27,11 @@ def main() -> None:
     rl.set_window_title(active_screen.title)
 
     # sprites
-    main_sprite_group = sprites.SpriteGroup()
-    main_sprite_group.register_sprite(player.Player(50, 50))
+    main_group = sprites.EntityGroup()
+    main_group.register_item(player.Player(50, 50))
 
     while not rl.window_should_close():
-        with rl.drawing(): active_screen.render([main_sprite_group])
-        active_screen.refresh([main_sprite_group])
+        with rl.drawing(): active_screen.render([main_group])
+        active_screen.refresh([], [main_group])
              
     rl.close_window()
