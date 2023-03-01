@@ -27,6 +27,10 @@ class Player(ControllableEntity):
             rl.KEY_RIGHT: (lambda *_: self.move_to(self.hitbox.x + 10, self.hitbox.y))
         }
 
+        # physics related variables
+        self.velocity = rl.Vector2(0, 0)
+        self.floor_height = 900
+
     def collision(self, item: Entity | Sprite | None) -> None:
         pass
 
@@ -36,5 +40,15 @@ class Player(ControllableEntity):
     def refresh(self, collision_item: Entity | Sprite | None, ticker: int) -> None:
         self._kb_input()
         self.collision(collision_item)
+
+        if self.hitbox.y < self.floor_height - self.hitbox.height:
+            self.velocity.y += 2
+
+        if self.hitbox.y >= self.floor_height - self.hitbox.height:
+            self.hitbox.y = self.floor_height - self.hitbox.height
+            self.velocity.y = 0
+        
+        self.hitbox.x += self.velocity.x
+        self.hitbox.y += self.velocity.y
 
         self._screen_wrap()
