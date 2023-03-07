@@ -31,7 +31,8 @@ def main() -> None:
     main_group.register_item(player.Player(50, 50))
 
     while not rl.window_should_close():
-        with rl.drawing(): active_screen.render([main_group])
+        with rl.drawing():
+            active_screen.render([main_group])
         active_screen.refresh([], [main_group])
              
     rl.close_window()
