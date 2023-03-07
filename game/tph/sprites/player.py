@@ -24,12 +24,34 @@ class Player(ControllableEntity):
         self._hitbox_color = Colors.maroon
         self._keys: dict[rl.KeyboardKey, typing.Callable[[], None]] = {
             rl.KEY_LEFT: (lambda *_: self.move_to(self.hitbox.x - 10, self.hitbox.y)),
-            rl.KEY_RIGHT: (lambda *_: self.move_to(self.hitbox.x + 10, self.hitbox.y))
+            rl.KEY_RIGHT: (lambda *_: self.move_to(self.hitbox.x + 10, self.hitbox.y)),
+            rl.KEY_SPACE: (lambda *_: self.jump()),
         }
 
         # physics related variables
+        self.ticker = 0
+        self.jump_ticker = 0
+        self.stop_ticking_jump = False
         self.velocity = rl.Vector2(0, 0)
         self.floor_height = 900
+
+    def jump(self) -> None:
+        if self.hitbox.y > self.floor_height - self.hitbox.height or self.jump_ticker > 0:
+            return
+        
+        if self.ticker % 6 == 0 and not self.stop_ticking_jump:
+            self.jump_ticker += 1
+
+        if self.jump_ticker <= 3:
+            self.velocity.y -= 2
+        elif self.jump_ticker > 4 and self.hitbox.y - self.hitbox.height > self.floor_height:
+            self.velocity.y = 3
+            self.stop_ticking_jump = True
+        
+        if rl.is_key_released(rl.KEY_SPACE):
+            self.velocity.y = 0
+            self.jump_ticker = 0
+            self.stop_ticking_jump = False
 
     def collision(self, item: Entity | Sprite | None) -> None:
         pass
@@ -38,6 +60,7 @@ class Player(ControllableEntity):
         rl.draw_rectangle_rec(self.hitbox, self._hitbox_color)
     
     def refresh(self, collision_item: Entity | Sprite | None, ticker: int) -> None:
+        self.ticker = ticker
         self._kb_input()
         self.collision(collision_item)
 
